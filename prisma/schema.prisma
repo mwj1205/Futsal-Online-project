@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,88 +10,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id           Int       @id @default(autoincrement())  // 계정고유번호
-  username     String    @unique                      // 아이디
-  password     String                                // 비밀번호
-  cash         Int                                    // 캐시
-  rating       Float                                  // 레이팅
-  nickname     String    @unique                      // 닉네임
-  storage      Storage[]                             // 선수보관함 (1:N 관계 여러 카드를 가질 수 있음)
-  squad        Squad?                                // 스쿼드 (1:1 관계 한 명의 유저는 한 개의 스쿼드만 가질 수 있음)
-  inventory    Inventory[]                             // 유저의 인벤토리 (N:1 관계)
-  shopRecords  ShopRecord[]                            // 유저의 구매 기록 (N:1 관계)
+model Users {
+  id       Int        @id @default(autoincrement())
+  username String     @unique
+  password String
+  nickname String     @unique
+  cash     Int        @default(10000)
+  rating   Int        @default(1000)
+  storage  Storage[]  @relation("UserStorage")
+  squad    Squad[]    @relation("UserSquad")
+  matchesA MatchLog[] @relation("UserA")
+  matchesB MatchLog[] @relation("UserB")
+  userCard UserCard[] @relation("UserCards")
 }
 
-model Card {
-  id          Int       @id @default(autoincrement())  // 카드고유번호
-  position    String                                   // 포지션
-  name        String                                   // 이름
-  speed       Int                                      // 속력
-  finishing   Int                                      // 골결정력
-  shotPower   Int                                      // 슛파워
-  defense     Int                                      // 대인수비
-  tackle      Int                                      // 태클
-  stamina     Int                                      // 스태미너
-  shortPass   Int                                      // 짧은패스
-  longPass    Int                                      // 긴패스
-  dribble     Int                                      // 드리블
-  storage     Storage[]                                // 이 카드를 소유한 선수보관함
-  squadForward    Squad[] @relation("ForwardCard")
-  squadMidfielder Squad[] @relation("MidfielderCard")
-  squadDefender   Squad[] @relation("DefenderCard")
+model BaseCard {
+  id         Int    @id
+  position   String
+  speed      Int
+  finishing  Int
+  shootPower Int
+}
+
+model UserCard {
+  id         Int       @id
+  playername String
+  position   String
+  user       Users     @relation("UserCards", fields: [userid], references: [id], onDelete: Cascade)
+  userid     Int
+  level      Int       @default(0)
+  storage    Storage[] @relation("CardStorage")
+  squad1     Squad[]   @relation("Player1")
+  squad2     Squad[]   @relation("Player2")
+  squad3     Squad[]   @relation("Player3")
 }
 
 model Storage {
-  id         Int    @id @default(autoincrement())   // 저장된 카드 식별자
-  user       User   @relation(fields: [userId], references: [id])  // User와의 관계 (N:1)
-  userId     Int                                   // FK to User
-  card       Card   @relation(fields: [cardId], references: [id])  // Card와의 관계 (N:1)
-  cardId     Int                                   // FK to Card
+  id     Int      @id @default(autoincrement())
+  user   Users    @relation("UserStorage", fields: [userid], references: [id], onDelete: Cascade)
+  userid Int
+  card   UserCard @relation("CardStorage", fields: [cardid], references: [id], onDelete: Cascade)
+  cardid Int
 }
 
 model Squad {
-  id         Int    @id @default(autoincrement())   // 스쿼드번호
-  user       User   @relation(fields: [userId], references: [id])  // User와의 관계 (1:1)
-  userId     Int    @unique                        // FK to User
-
-  forwardCard  Card   @relation("ForwardCard", fields: [forwardCardId], references: [id])
-  forwardCardId Int
-  midfielderCard Card  @relation("MidfielderCard", fields: [midfielderCardId], references: [id])
-  midfielderCardId Int
-  defenderCard Card    @relation("DefenderCard", fields: [defenderCardId], references: [id])
-  defenderCardId Int
-  totalstat Int? // 선수들의 스탯 총합
+  id        Int      @id @default(autoincrement())
+  user      Users    @relation("UserSquad", fields: [userid], references: [id], onDelete: Cascade)
+  userid    Int
+  player1   UserCard? @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
+  player1Id Int?
+  player2   UserCard? @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
+  player2Id Int?
+  player3   UserCard? @relation("Player3", fields: [player3Id], references: [id], onDelete: SetNull)
+  player3Id Int?
 }
 
-model Shop {
-  id       Int      @id @default(autoincrement())   // 상점 고유 번호
-  name     String                                 // 상점 이름
-  items    Item[]                                 // 상점에서 판매하는 상품들 (1:N 관계)
-}
-
-model Item {
-  id        Int      @id @default(autoincrement())  // 아이템 고유 번호
-  name      String                                // 상품 이름
-  price     Int                                   // 상품 가격
-  shop      Shop     @relation(fields: [shopId], references: [id])  // 상점과의 관계 (N:1)
-  shopId    Int                                   // FK to Shop
-  inventory Inventory[]                           // 상품이 인벤토리에 저장된 기록 (1:N 관계)
-  shopRecords ShopRecord[]                        // 상점 기록 (1:N 관계)
-}
-
-model Inventory {
-  id        Int      @id @default(autoincrement())  // 인벤토리 고유 번호
-  user      User     @relation(fields: [userId], references: [id])  // 유저와의 관계 (N:1)
-  userId    Int                                   // FK to User
-  item      Item     @relation(fields: [itemId], references: [id])  // 아이템과의 관계 (N:1)
-  itemId    Int                                   // FK to Item
-}
-
-model ShopRecord {
-  id        Int      @id @default(autoincrement())  // 상점 기록 고유 번호
-  user      User     @relation(fields: [userId], references: [id])  // 유저와의 관계 (N:1)
-  userId    Int                                   // FK to User
-  item      Item     @relation(fields: [itemId], references: [id])  // 아이템과의 관계 (N:1)
-  itemId    Int                                   // FK to Item
+model MatchLog {
+  id            Int      @id @default(autoincrement())
+  userA         Users    @relation("UserA", fields: [userAid], references: [id])
+  userAid       Int
+  userB         Users    @relation("UserB", fields: [userBid], references: [id])
+  userBid       Int
+  scoreA        Int
+  scoreB        Int
+  RatingChangeA Int
+  RatingChangeB Int
+  matchdate     DateTime @default(now())
 }
