@@ -54,69 +54,73 @@ function simulateGoals(
   return { userA_goals, userB_goals };
 }
 
+async function getUserStats(userId) {
+  const user = await prisma.users.findUnique({
+    where: { id: userId },
+    include: { squad: { include: { player1: true, player2: true, player3: true } } },
+  });
+
+  if (!user) return null;
+
+  // 각 유저의 미드필더, 공격수, 수비수 스탯 추출
+  const stats = {
+    midfielder_pass: user.squad?.player2?.pass || 0,
+    attacker_shoot: user.squad?.player1?.shoot || 0,
+    defender_defense: user.squad?.player3?.defense || 0,
+  };
+
+  return stats;
+}
+
+async function playMatch(userAid, userBid) {
+  const userA = await getUserStats(userAid);
+  const userB = await getUserStats(userBid);
+
+  if (!userA || !userB) {
+    return res.status(404).json({ error: '유저가 발견되지 않았습니다.' });
+  }
+
+  // Step 1: 공격 기회 분배
+  const { userA_attacks, userB_attacks } = allocateAttacks(
+    userA.midfielder_pass,
+    userB.midfielder_pass,
+  );
+
+  // Step 2: 득점 시뮬레이션
+  const { userA_goals, userB_goals } = simulateGoals(
+    userA.attacker_shoot,
+    userB.defender_defense,
+    userA_attacks,
+    userB.attacker_shoot,
+    userA.defender_defense,
+    userB_attacks,
+  );
+
+  // 경기 결과 저장
+  const matchLog = await prisma.matchLog.create({
+    data: {
+      userA: { connect: { id: userAid } },
+      userB: { connect: { id: userBid } },
+      scoreA: userA_goals,
+      scoreB: userB_goals,
+      RatingChangeA: userA_goals - userB_goals, //레이팅 변경
+      RatingChangeB: userB_goals - userA_goals,
+    },
+  });
+
+  return { userA_goals, userB_goals, matchLog };
+}
+
 // 경기를 시뮬레이션하는 API 엔드포인트
 router.post('/play', async (req, res) => {
   const { userAid, userBid } = req.body;
 
   try {
-    // 두 유저의 스쿼드 정보 가져오기
-    const userA = await prisma.users.findUnique({
-      where: { id: userAid },
-      include: { squad: { include: { player1: true, player2: true, player3: true } } },
-    });
+    const result = await playMatch(userAid, userBid);
 
-    const userB = await prisma.users.findUnique({
-      where: { id: userBid },
-      include: { squad: { include: { player1: true, player2: true, player3: true } } },
-    });
-
-    if (!userA || !userB) {
-      return res.status(404).json({ error: '유저가 발견되지 않았습니다.' });
-    }
-
-    // 각 유저의 미드필더, 공격수, 수비수 스탯 추출
-    const userA_midfielder_pass = userA.squad[0]?.player2?.pass || 100;
-    const userB_midfielder_pass = userB.squad[0]?.player2?.pass || 100;
-
-    const userA_attacker_shoot = userA.squad[0]?.player1?.shoot || 100;
-    const userB_defender_defense = userB.squad[0]?.player3?.defense || 100;
-
-    const userB_attacker_shoot = userB.squad[0]?.player1?.shoot || 100;
-    const userA_defender_defense = userA.squad[0]?.player3?.defense || 100;
-
-    // Step 1: 공격 기회 분배
-    const { userA_attacks, userB_attacks } = allocateAttacks(
-      userA_midfielder_pass,
-      userB_midfielder_pass,
-    );
-
-    // Step 2: 득점 시뮬레이션
-    const { userA_goals, userB_goals } = simulateGoals(
-      userA_attacker_shoot,
-      userB_defender_defense,
-      userA_attacks,
-      userB_attacker_shoot,
-      userA_defender_defense,
-      userB_attacks,
-    );
-
-    // 경기 결과 저장
-    const matchLog = await prisma.matchLog.create({
-      data: {
-        userA: { connect: { id: userAid } },
-        userB: { connect: { id: userBid } },
-        scoreA: userA_goals,
-        scoreB: userB_goals,
-        RatingChangeA: userA_goals - userB_goals, //레이팅 변경
-        RatingChangeB: userB_goals - userA_goals,
-      },
-    });
-
-    return res.json({
+    return res.status(200).json({
       message: '경기가 끝났습니다.',
-      userA_goals,
-      userB_goals,
-      matchLog,
+      ...result,
     });
   } catch (error) {
     console.error(error);
@@ -161,13 +165,16 @@ router.post('/play/matchmaking', async (req, res, next) => {
     }
 
     if (!opponent) {
-      const error = new Error('매칭 상대를 찾을 수 없습니다.');
-      error.status = 404;
-      throw error;
+      return res.status(404).json({ error: '상대를 찾을 수 없습니다.' });
     }
-    // todo: 유저 대결 기믹
 
-    return res.status(200).json(opponent);
+    // 유저 경기 시뮬레이션
+    const result = await playMatch(user.id, opponent.id);
+
+    return res.json({
+      message: '경기가 끝났습니다.',
+      ...result,
+    });
   } catch (error) {
     next(error);
   }
