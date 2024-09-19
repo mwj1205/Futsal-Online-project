@@ -18,7 +18,7 @@ model Users {
   cash     Int        @default(10000)
   rating   Int        @default(1000)
   storage  Storage[]  @relation("UserStorage")
-  squad    Squad[]    @relation("UserSquad")
+  squad    Squad?     @relation("UserSquad")
   matchesA MatchLog[] @relation("UserA")
   matchesB MatchLog[] @relation("UserB")
   userCard UserCard[] @relation("UserCards")
@@ -34,12 +34,15 @@ model BaseCard {
 }
 
 model UserCard {
-  id         Int       @id
+  id         Int       @id @default(autoincrement())
   playername String
   position   String
   user       Users     @relation("UserCards", fields: [userid], references: [id], onDelete: Cascade)
   userid     Int
   level      Int       @default(0)
+  shoot      Int
+  pass       Int
+  defense    Int
   storage    Storage[] @relation("CardStorage")
   squad1     Squad[]   @relation("Player1")
   squad2     Squad[]   @relation("Player2")
@@ -57,7 +60,7 @@ model Storage {
 model Squad {
   id        Int      @id @default(autoincrement())
   user      Users    @relation("UserSquad", fields: [userid], references: [id], onDelete: Cascade)
-  userid    Int
+  userid    Int      @unique
   player1   UserCard? @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
   player1Id Int?
   player2   UserCard? @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
