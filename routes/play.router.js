@@ -108,7 +108,7 @@ async function playMatch(userAid, userBid) {
     },
   });
 
-  return { userA_goals, userB_goals, matchLog };
+  return { matchLog };
 }
 
 // 경기를 시뮬레이션하는 API 엔드포인트
