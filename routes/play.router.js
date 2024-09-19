@@ -71,7 +71,6 @@ async function getUserStats(userId) {
 
   return stats;
 }
-
 async function playMatch(userAid, userBid) {
   const userA = await getUserStats(userAid);
   const userB = await getUserStats(userBid);
@@ -96,21 +95,47 @@ async function playMatch(userAid, userBid) {
     userB_attacks,
   );
 
-  // 경기 결과 저장
+  // Step 3: 레이팅 변경 값 설정
+  const winRatingChange = 10;
+  const loseRatingChange = -10;
+
+  // 승리 여부에 따라 레이팅 변경 설정
+  const ratingChangeA = userA_goals > userB_goals ? winRatingChange : loseRatingChange;
+  const ratingChangeB = userB_goals > userA_goals ? winRatingChange : loseRatingChange;
+
+  // Step 4: 사용자 레이팅 업데이트
+  await prisma.users.update({
+    where: { id: userAid },
+    data: {
+      rating: {
+        increment: ratingChangeA,
+      },
+    },
+  });
+
+  await prisma.users.update({
+    where: { id: userBid },
+    data: {
+      rating: {
+        increment: ratingChangeB,
+      },
+    },
+  });
+
+  // Step 5: 경기 결과 저장
   const matchLog = await prisma.matchLog.create({
     data: {
       userA: { connect: { id: userAid } },
       userB: { connect: { id: userBid } },
       scoreA: userA_goals,
       scoreB: userB_goals,
-      RatingChangeA: userA_goals - userB_goals, //레이팅 변경
-      RatingChangeB: userB_goals - userA_goals,
+      RatingChangeA: ratingChangeA, // 레이팅 변경
+      RatingChangeB: ratingChangeB,
     },
   });
 
   return { matchLog };
 }
-
 // 경기를 시뮬레이션하는 API 엔드포인트
 router.post('/play', async (req, res) => {
   const { userAid, userBid } = req.body;
