@@ -28,8 +28,9 @@ model BaseCard {
   id         Int    @id
   position   String
   speed      Int
-  finishing  Int
-  shootPower Int
+  shoot Int
+  pass Int
+  defense Int
 }
 
 model UserCard {
