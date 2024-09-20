@@ -26,11 +26,11 @@ model Users {
 
 model BaseCard {
   id         Int    @id
+  playername String
   position   String
-  speed      Int
-  shoot Int
-  pass Int
-  defense Int
+  shoot      Int
+  pass       Int
+  defense    Int
 }
 
 model UserCard {
