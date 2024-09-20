@@ -32,7 +32,7 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 - Authorization 헤더를 통해 JWT를 전달받으며, 인증에 실패하는 경우 알맞은 HTTP Status Code와 에러 메세지를 반환합니다.
 - 인증 성공 시, 사용자 정보를 `req.user`에 담고 다음 동작을 진행합니다.
 
-- ## 데이터베이스 모델링
+## 데이터베이스 모델링
 ### ERD 다이어그램
 ![Untitled](https://github.com/user-attachments/assets/3cf756a9-2ab9-41d7-8a0f-b100aaea65d2)
 
