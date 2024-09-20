@@ -148,8 +148,7 @@ router.post('/play', async (req, res) => {
       ...result,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: '예상치 못한 에러' });
+    next(error);
   }
 });
 
