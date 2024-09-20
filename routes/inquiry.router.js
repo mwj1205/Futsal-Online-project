@@ -1,7 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
+const express = require('express');
 
 const prisma = new PrismaClient();
-
+const app = express();
 // 스쿼드 조회 함수
 async function getUserSquad(userId) {
   try {
@@ -41,3 +42,18 @@ async function getUserSquad(userId) {
     return null;
   }
 }
+
+
+app.get('/teams/:userId', async (req, res) => {
+  const { userId } = req.params; //userId 받아오기
+
+  // 함수호출
+  const squadPlayers = await getUserSquad(userId);
+
+
+  if (!squadPlayers) {
+    return res.status(404).json({ message: '유저 또는 스쿼드를 찾을 수 없습니다.' });
+  }
+
+  return res.json({ players: squadPlayers });
+});
