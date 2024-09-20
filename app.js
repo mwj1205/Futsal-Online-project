@@ -12,7 +12,7 @@ const PORT = 3000;
 app.use(express.json());
 
 app.use(LogMiddleware);
-app.use('/api', [playRouter, rankingRouter]);
+app.use('/api', [userRouter, playRouter, inquiryRouter, rankingRouter]);
 
 app.use(ErrorHandlerMiddleware);
 
