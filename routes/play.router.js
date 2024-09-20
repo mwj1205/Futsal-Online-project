@@ -1,5 +1,6 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -137,7 +138,7 @@ async function playMatch(userAid, userBid) {
   return { matchLog };
 }
 // 경기를 시뮬레이션하는 API 엔드포인트
-router.post('/play', async (req, res) => {
+router.post('/play', authMiddleware, async (req, res) => {
   const { userAid, userBid } = req.body;
 
   try {
@@ -153,12 +154,10 @@ router.post('/play', async (req, res) => {
 });
 
 // 유저를 매칭해서 대결하는 API
-router.post('/play/matchmaking', async (req, res, next) => {
+router.post('/play/matchmaking', authMiddleware, async (req, res, next) => {
   try {
     // todo: 인증 정보에서 유저 정보 가져오기
-    const user = await prisma.users.findFirst({
-      where: { id: 1 },
-    });
+    const user = req.user;
 
     let opponent = null;
     let currentRange = 10;
