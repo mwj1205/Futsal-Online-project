@@ -33,6 +33,9 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 - 인증 성공 시, 사용자 정보를 `req.user`에 담고 다음 동작을 진행합니다.
 
 - ## 데이터베이스 모델링
+### ERD 다이어그램
+![Untitled](https://github.com/user-attachments/assets/3cf756a9-2ab9-41d7-8a0f-b100aaea65d2)
+
 **유저(Users), 선수의 기본 스탯(BaseCard), 유저가 소유한 선수(UserCard), 유저의 저장고(Storage), 유저의 팀(Squad), 게임 로그(MatchLog)** 총 6개의 주요 테이블로 구성되어 있습니다.
 - Users 테이블 : 유저 정보 관리
   - id: 유저의 고유 id
