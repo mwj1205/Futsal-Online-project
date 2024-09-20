@@ -139,9 +139,15 @@ async function playMatch(userAid, userBid) {
 }
 // 경기를 시뮬레이션하는 API 엔드포인트
 router.post('/play', authMiddleware, async (req, res) => {
-  const { userAid, userBid } = req.body;
+  const { userBid } = req.body;
+
+  // 상대 유저 ID 검증
+  if (typeof userBid !== 'number') {
+    return res.status(400).json({ error: '유저 ID는 숫자여야 합니다.' });
+  }
 
   try {
+    const userAid = req.user.id; // JWT로 인증된 유저의 ID
     const result = await playMatch(userAid, userBid);
 
     return res.status(200).json({
@@ -149,7 +155,7 @@ router.post('/play', authMiddleware, async (req, res) => {
       ...result,
     });
   } catch (error) {
-    next(error);
+    return res.status(500).json({ error: '서버 에러가 발생했습니다.' });
   }
 });
 
