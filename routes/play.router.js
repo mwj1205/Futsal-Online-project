@@ -61,8 +61,9 @@ async function getUserStats(userId) {
     include: { squad: { include: { player1: true, player2: true, player3: true } } },
   });
 
-  if (!user) return null;
-
+  if (!user) {
+    return null;
+  }
   // 각 유저의 미드필더, 공격수, 수비수 스탯 추출
   const stats = {
     midfielder_pass: user.squad?.player2?.pass || 0,
@@ -77,7 +78,9 @@ async function playMatch(userAid, userBid) {
   const userB = await getUserStats(userBid);
 
   if (!userA || !userB) {
-    return res.status(404).json({ error: '유저가 발견되지 않았습니다.' });
+    const error = new Error('유저가 발견되지 않았습니다.');
+    error.status = 404;
+    return error;
   }
 
   // Step 1: 공격 기회 분배
@@ -138,11 +141,21 @@ async function playMatch(userAid, userBid) {
   return { matchLog };
 }
 // 경기를 시뮬레이션하는 API 엔드포인트
-router.post('/play', authMiddleware, async (req, res) => {
-  const { userAid, userBid } = req.body;
+router.post('/play', authMiddleware, async (req, res, next) => {
+  const { userBid } = req.body;
+
+  // 상대 유저 ID 검증
+  if (typeof userBid !== 'number') {
+    return res.status(400).json({ error: '유저 ID는 숫자여야 합니다.' });
+  }
 
   try {
+    const userAid = req.user.id; // JWT로 인증된 유저의 ID
     const result = await playMatch(userAid, userBid);
+
+    if (result instanceof Error) {
+      throw result; // 결과가 에러 객체라면 throw
+    }
 
     return res.status(200).json({
       message: '경기가 끝났습니다.',
@@ -193,6 +206,10 @@ router.post('/play/matchmaking', authMiddleware, async (req, res, next) => {
 
     // 유저 경기 시뮬레이션
     const result = await playMatch(user.id, opponent.id);
+
+    if (result instanceof Error) {
+      throw result; // 결과가 에러 객체라면 throw
+    }
 
     return res.json({
       message: '경기가 끝났습니다.',

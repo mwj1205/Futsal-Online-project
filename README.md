@@ -84,10 +84,10 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 **요청 형식:**
 ```json
 {
-	"username": "spartaman",
-	"password": "asdf4321",
-	"confirmPassword": "asdf4321",
-	"name": "스파르타맨"
+  "username": "spartaman",
+  "password": "asdf4321",
+  "confirmPassword": "asdf4321",
+  "name": "스파르타맨"
 }
 ```
 - `username`: 로그인 할 때의 아이디. 다른 유저와 중복 불가능. 알파벳 소문자와 숫자로 이루어진 문자열.
@@ -98,9 +98,9 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 **응답 형식:**
 ```json
 {
-	"message": "회원가입이 완료되었습니다.",
-	"username": "spartaman",
-	"name": "스파르타맨"
+  "message": "회원가입이 완료되었습니다.",
+  "username": "spartaman",
+  "name": "스파르타맨"
 }
 ```
 - `message`: 회원가입 성공 메시지.
@@ -110,7 +110,7 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 **실패 시 응답 예시**
 ```json
 {
-	"error": "이미 존재하는 사용자명입니다."
+  "error": "이미 존재하는 사용자명입니다."
 }
 ```
 - `409 Conflict`: 입력된 사용자명이 이미 존재할 경우 발생하는 오류
@@ -130,8 +130,8 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 **요청 형식:**
 ```json
 {
-	"username": "spartaman",
-	"password": "asdf4321",
+  "username": "spartaman",
+  "password": "asdf4321",
 }
 ```
 - `username`: 로그인 할 때의 아이디.
@@ -140,18 +140,17 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 **응답 형식:**
 ```json
 {
-	"message": "로그인 성공",
-	"token": "JWT 토큰"
+  "message": "로그인 성공",
+  "token": "JWT 토큰"
 }
 ```
 - `message`: 로그인 성공 메시지.
 - `token`: 인증이 필요한 API에서 사용되는 JWT 토큰.
 
-
 **실패 시 응답 예시**
 ```json
 {
-	"error": "비밀번호가 일치하지 않습니다."
+  "error": "비밀번호가 일치하지 않습니다."
 }
 ```
 - `401 Unauthorized `: 입력된 비밀번호와 데이터베이스에 저장된 비밀번호가 다를 경우 발생하는 오류
@@ -166,17 +165,41 @@ Nodejs 6기 - 9조 풋살 온라인 프로젝트
 6. 클라이언트는 이후 인증이 필요한 API 요청 시, authorization 헤더에 해당 토큰을 담아서 보냄
 
 ## 캐시 구매 API
-### 3. 캐시 구매 API (POST /users/??) (JWT 인증 필요)
+### 3. 캐시 구매 API (POST /user/getcash) (JWT 인증 필요)
 user가 캐시를 획득하는 API
 
 **요청 형식:**
-
+```json
+{
+  "amount": 10000
+}
+```
+- `amount`: 획득할 cash의 양. 최소 100원 이상의 캐시를 충전해야 함
 
 **응답 형식:**
+```json
+{
+  "message": "10000캐시 획득",
+  "name": "abc",
+  "cash": 30000
+}
+```
+- `name`: 캐시를 획득한 유저의 닉네임
+- `cash`: 유저가 캐시를 획득한 후의 cash의 양
 
+
+**실패 시 응답 예시**
+```json
+{
+  "error": "100원 이상 충전해야 합니다."
+}
+```
 
 **동작 설명**
-1. 클라이언트는 POST 요청을 보냄
+1. 클라이언트는 획득할 cash의 양을 POST 요청로 보냄
+2. 인증 미들웨어를 이용해 로그인 정보의 유효성 검사
+3. 유저의 cash를 amount만큼 증가시킴
+4. 유저의 이름과 변경된 cash를 반환
 
 ## 선수 뽑기 API
 ### 4. 선수 뽑기 API (POST /??) (JWT 인증 필요)
@@ -192,7 +215,7 @@ user가 캐시를 획득하는 API
 1. 클라이언트는 POST 요청을 보냄
 
 ## 팀 꾸리기 API
-### 5. 팀 꾸리기 API (POST /users/??)
+### 5. 팀 꾸리기 API (POST /user/getcash)
 user가 캐시를 획득하는 API
 
 **요청 형식:**
@@ -205,7 +228,7 @@ user가 캐시를 획득하는 API
 1. 클라이언트는 POST 요청을 보냄
 
 ## 축구 게임 API
-### 5. 축구 게임 API (POST /play) (JWT 인증 필요)
+### 6. 축구 게임 API (POST /play) (JWT 인증 필요)
 지정한 선수와 게임을 실행하는 API
 
 **요청 형식:**
