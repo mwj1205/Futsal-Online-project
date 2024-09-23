@@ -3,7 +3,7 @@ import { prisma } from '../utils/prisma/prismaClient.js';
 
 const router = express.Router();
 
-// 가챠 비용 설정(임의 설정)
+// 가챠 비용(임의 설정)
 const gachaCost1 = 100; // 1장 가챠 비용
 const gachaCost2 = 1000; // 10장 가챠 비용
 
