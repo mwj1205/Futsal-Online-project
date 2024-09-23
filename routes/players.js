@@ -3,33 +3,33 @@ import {prisma} from '../utils/prisma/prismaClient.js';
 
 const router = express.Router();
 
-const allPlayer = {
+const allPlayers = {
     //전체 선수 목록 (작성해야됨)
 }
 
 // 서버에서 보유한 선수 목록
-let ownedPlayers = [];
+let ownelayers = [];
 
 // 보유 선수 목록을 업데이트
-router.post('/updateOwnedPlayers', (req, res) => {
+router.post('/updateOwnPlayers', (req, res) => {
     const { newPlayers } = req.body;
 
     // 새롭게 얻은 선수들을 보유 선수 목록에 추가
     newPlayers.forEach(player => {
-        if (!ownedPlayers.includes(player)) {
-            ownedPlayers.push(player);
+        if (!ownelayers.includes(player)) {
+            ownelayers.push(player);
         }
     });
 
     // 업데이트 후 성공 응답 전송
-    res.json({ success: true, ownedPlayers });
+    res.json({ success: true, ownelayers });
 });
 
 // 클라이언트가 선수 데이터를 불러갈 수 있도록 제공
 router.get('/players', (req, res) => {
     res.json({
         allPlayers,
-        ownedPlayers,
+        ownelayers,
     });
 });
 
@@ -47,7 +47,7 @@ function playerList() {
     const ownedList = document.getElementById('ownedPlayers');
     const notOwnedList = document.getElementById('notOwnedPlayers');
 
-    allPlayer.array.forEach(player => {
+    allPlayers.array.forEach(player => {
         const listItem = document.createElement('li');
         listItem.textContent = player;
 
@@ -67,7 +67,7 @@ function playerList() {
 async function loadPlayerData() {
     const response = await fetch('/players');
     const data = await response.json();
-    playerList(data.allPlayers, data.ownedPlayers);
+    playerList(data.allPlayers, data.ownPlayers);
 }
 
 // 페이지 로드 시 초기 선수 목록 표시
