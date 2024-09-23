@@ -2,97 +2,83 @@ import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js';
 import authMiddleware from '../middlewares/auth.middleware.js';
 
-
-//API 사용 /api/support/MF,DF,FW
-//주요스탯이 2씩 상승합니다.
-
 const router = express.Router();
 
-// 스쿼드 스탯 상승 함수
-async function increaseStat(userId, position) {
-  // 유저의 스쿼드와 해당 스쿼드의 카드 정보 가져오기
-  const user = await prisma.users.findUnique({
-    where: { id: userId },
+async function statUpdate(userId, position) {
+  const userSquad = await prisma.squad.findUnique({
+    where: { userid: userId },
     include: {
-      squad: {
-        include: {
-          player1: true, // FW 
-          player2: true, // MF 
-          player3: true, // DF 
-        },
-      },
+      player1: true, // FW
+      player2: true, // MF
+      player3: true, // DF
     },
   });
 
-  if (!user || !user.squad) {
-    throw new Error('유저 혹은 스쿼드가 없습니다');
+  // 지원된 포지션이 있는지 체크
+  if (userSquad.supportUsed) {
+    throw new Error('이미 지원된 포지션이 있습니다. 더 이상 다른 포지션에 지원할 수 없습니다.');
   }
 
-  // 스탯 상승 처리
-  let updatedSquad = {};
-  if (position === 'FW') {
-    // FW의 shoot 스탯을 2 증가시킴
-    if (user.squad.player1) {
-      updatedSquad = await prisma.squad.update({
-        where: { id: user.squad.id },
+  // 포지션에 따라 스탯 업데이트
+  switch (position) {
+    case 'FW':
+      await prisma.squad.update({
+        where: { userid: userId },
         data: {
           player1: {
             update: {
-              shoot: { increment: 2 }, // 공격수의 슛 스탯 2 증가
+              shoot: { increment: 2 },
             },
           },
+          supportUsed: true, // 지원된 포지션 표시
         },
       });
-    }
-  } else if (position === 'MF') {
-    // MF의 pass 스탯을 2 증가시킴
-    if (user.squad.player2) {
-      updatedSquad = await prisma.squad.update({
-        where: { id: user.squad.id },
+      break;
+
+    case 'MF':
+      await prisma.squad.update({
+        where: { userid: userId },
         data: {
           player2: {
             update: {
-              pass: { increment: 2 }, // 미드필더의 패스 스탯 2 증가
+              pass: { increment: 2 },
             },
           },
+          supportUsed: true, // 지원된 포지션 표시
         },
       });
-    }
-  } else if (position === 'DF') {
-    // DF의 defense 스탯을 2 증가시킴
-    if (user.squad.player3) {
-      updatedSquad = await prisma.squad.update({
-        where: { id: user.squad.id },
+      break;
+
+    case 'DF':
+      await prisma.squad.update({
+        where: { userid: userId },
         data: {
           player3: {
             update: {
-              defense: { increment: 2 }, // 수비수의 방어 스탯 2 증가
+              defense: { increment: 2 },
             },
           },
+          supportUsed: true, // 지원된 포지션 표시
         },
       });
-    }
-  } else {
-    throw new Error('잘못된 입력');
-  }
+      break;
 
-  return updatedSquad;
+    default:
+      throw new Error('잘못된 포지션입니다.');
+  }
 }
 
-// 스탯 지원
+// 지원 API 
 router.post('/support/:position', authMiddleware, async (req, res, next) => {
   const { position } = req.params;
-  const userId = req.user.id;
+  const userId = req.user.id; // JWT로 인증된 유저 ID
 
   try {
-    const updatedSquad = await increaseStat(userId, position);
-
-    return res.status(200).json({
-      message: `서포터의 응원으로 ${position}의 주 능력치가 2 상승했습니다.`,
-      updatedSquad,
-    });
+    // 포지션 확인 및 스탯 업데이트
+    await statUpdate(userId, position);
+    return res.status(200).json({ message: `스탯이 성공적으로 증가했습니다: ${position}` });
   } catch (error) {
-    next(error);
+    return res.status(400).json({ error: error.message });
   }
 });
 

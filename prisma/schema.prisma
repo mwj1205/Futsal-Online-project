@@ -67,6 +67,7 @@ model Squad {
   player2Id Int?
   player3   UserCard? @relation("Player3", fields: [player3Id], references: [id], onDelete: SetNull)
   player3Id Int?
+  supportUsed Boolean  @default(false)
 }
 
 model MatchLog {
