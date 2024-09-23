@@ -22,7 +22,7 @@ router.get('/players/base', async (req, res, next) => {
       id: player.id,
       playername: player.playername,
       position: player.position,
-      shhot: player.shoot,
+      shoot: player.shoot,
       pass: player.pass,
       defence: player.defense,
     }));

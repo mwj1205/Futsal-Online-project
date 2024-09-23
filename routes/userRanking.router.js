@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma/prismaClient.js';
 
 const router = express.Router();
 
+// 예시 요청: GET localhost:3000/api/rankings?page=1&limit=5
 // 유저 랭킹 조회 API
 router.get('/rankings', async (req, res, next) => {
   try {
