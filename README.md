@@ -256,12 +256,13 @@ user의 squad를 구성하는 API
 
 **요청 형식:**
 
-````json
+```json
 {
 	"player1Id": 1,
 	"player2Id": 2,
   "player3Id": 3
 }
+```
 
 **응답 형식:**
 ```json
