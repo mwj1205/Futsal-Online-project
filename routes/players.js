@@ -1,78 +1,38 @@
 import express from 'express';
-import {prisma} from '../utils/prisma/prismaClient.js';
+import { prisma } from '../utils/prisma/prismaClient.js';
 
 const router = express.Router();
 
-const allPlayers = {
-    //전체 선수 목록 (작성해야됨)
-}
-
-// 서버에서 보유한 선수 목록
-let ownelayers = [];
-
-// 보유 선수 목록을 업데이트
-router.post('/updateOwnPlayers', (req, res) => {
-    const { newPlayers } = req.body;
-
-    // 새롭게 얻은 선수들을 보유 선수 목록에 추가
-    newPlayers.forEach(player => {
-        if (!ownelayers.includes(player)) {
-            ownelayers.push(player);
-        }
-    });
-
-    // 업데이트 후 성공 응답 전송
-    res.json({ success: true, ownelayers });
-});
-
-// 클라이언트가 선수 데이터를 불러갈 수 있도록 제공
-router.get('/players', (req, res) => {
-    res.json({
-        allPlayers,
-        ownelayers,
-    });
-});
-
-function setPlayerStyle(playerElement, isOwned) {
-    if (isOwned) {
-        // 보유한 선수는 흰색
-        playerElement.style.color = 'white';  
-    } else {
-        // 보유하지 않은 선수는 회색
-        playerElement.style.color = 'gray';    
+// 전체 카드 목록 조회
+router.get('/basecards', async (req, res) => {
+    try {
+        const baseCards = await prisma.baseCard.findMany();
+        res.json({ baseCards });
+    } catch (error) {
+        res.status(500).json({ error: '카드 목록을 불러오는 데 실패했습니다.' });
     }
-}
+});
 
-function playerList() {
-    const ownedList = document.getElementById('ownedPlayers');
-    const notOwnedList = document.getElementById('notOwnedPlayers');
+// 사용자가 보유한 카드 목록 조회
+router.get('/users/:userId/cards', async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        const userCards = await prisma.storage.findMany({
+            where: { userid: parseInt(userId) },
+            include: {
+                card: true, // UserCard 정보를 함께 불러옴
+            },
+        });
 
-    allPlayers.array.forEach(player => {
-        const listItem = document.createElement('li');
-        listItem.textContent = player;
-
-        if (ownPlayers.include(player)) {
-            //보유한 선수 스타일 적용
-            setPlayerStyle(listItem, true); 
-            ownedList.appendChild(listItem);
-        } else {
-            //보유하지 않은 선수 스타일 적용
-            setPlayerStyle(listItem, false);
-            notOwnedList.appendChild(listItem);
+        if (!userCards) {
+            return res.status(404).json({ error: '보유한 카드를 찾을 수 없습니다.' });
         }
-    });
-};
 
-// 서버에서 데이터 로드 후 반영
-async function loadPlayerData() {
-    const response = await fetch('/players');
-    const data = await response.json();
-    playerList(data.allPlayers, data.ownPlayers);
-}
-
-// 페이지 로드 시 초기 선수 목록 표시
-window.onload = () => {
-    loadPlayerData();
-};
+        res.json({ ownedCards: userCards });
+    } catch (error) {
+        res.status(500).json({ error: '보유 카드 목록을 불러오는 데 실패했습니다.' });
+    }
+});
 
 export default router;
