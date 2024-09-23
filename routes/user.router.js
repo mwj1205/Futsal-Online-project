@@ -38,6 +38,7 @@ export const loginSchema = Joi.object({
     'any.required': '비밀번호를 입력해주세요.',
   }),
 });
+
 const cashAmountSchema = Joi.object({
   amount: Joi.number().integer().min(100).messages({
     'number.base': '캐시의 양은 숫자여야 합니다.',
