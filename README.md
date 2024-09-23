@@ -258,8 +258,8 @@ user의 squad를 구성하는 API
 
 ```json
 {
-	"player1Id": 1,
-	"player2Id": 2,
+  "player1Id": 1,
+  "player2Id": 2,
   "player3Id": 3
 }
 ```
@@ -267,13 +267,13 @@ user의 squad를 구성하는 API
 **응답 형식:**
 ```json
 {
-	"message": "팀 구성이 완료되었습니다.",
-	"squad": {
-		"userid": 1,
-		"player1Id": 1,
-		"player2Id": 2,
-		"player3Id": 3
-	}
+  "message": "팀 구성이 완료되었습니다.",
+  "squad": {
+    "userid": 1,
+    "player1Id": 1,
+    "player2Id": 2,
+    "player3Id": 3
+  }
 }
 ```
 
