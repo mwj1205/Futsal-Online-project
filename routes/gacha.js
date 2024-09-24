@@ -1,30 +1,24 @@
 import express from 'express';
 import { prisma } from '../utils/prisma/prismaClient.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-// 가챠 비용(임의 설정)
-const gachaCost1 = 100; // 1장 가챠 비용
-const gachaCost2 = 1000; // 10장 가챠 비용
+// 가챠 비용 설정
+const gachaCostPerCard = 100; // 1장당 가챠 비용
 
 // 가챠 실행
-router.post('/users/:userId/gacha', async (req, res) => {
-    const { userId } = req.params;
-    const { numDraws } = req.body;  // 몇 장을 뽑을 것인지 (1장 또는 10장)
+router.post('/gacha', authMiddleware, async (req, res) => {
+    const { numDraws } = req.body;  // 몇 장을 뽑을 것인지
+    const user = req.user; // 인증된 유저 정보
 
-    const totalCost = numDraws === 1 ? gachaCost1 : gachaCost2;
+    // 기본값 설정: 1회 또는 10회
+    let draws = parseInt(numDraws) || 1; // 기본값 1
+    if (draws < 1 || draws > 10) draws = 10; // 1~10회 사이로 제한
+
+    const totalCost = draws * gachaCostPerCard;
 
     try {
-        // 유저 정보 가져오기
-        const user = await prisma.users.findUnique({
-            where: { id: parseInt(userId) },
-            include: { storage: true },
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
-        }
-
         // 골드 부족 체크
         if (user.cash < totalCost) {
             return res.status(400).json({ error: '골드가 부족합니다.' });
@@ -32,7 +26,7 @@ router.post('/users/:userId/gacha', async (req, res) => {
 
         // 골드 차감
         const updatedUser = await prisma.users.update({
-            where: { id: parseInt(userId) },
+            where: { id: user.id },
             data: { cash: { decrement: totalCost } },
         });
 
@@ -40,16 +34,20 @@ router.post('/users/:userId/gacha', async (req, res) => {
         const baseCards = await prisma.baseCard.findMany();
         let newCards = [];
 
-        for (let i = 0; i < numDraws; i++) {
+        for (let i = 0; i < draws; i++) {
             const randomIndex = Math.floor(Math.random() * baseCards.length);
             const drawnBaseCard = baseCards[randomIndex];
 
-            // 새로운 UserCard 생성
+            // 새로운 UserCard 생성 및 stat 정보 저장
             const newCard = await prisma.userCard.create({
                 data: {
                     playername: drawnBaseCard.name,
                     position: drawnBaseCard.position,
                     userid: user.id,
+                    speed: drawnBaseCard.speed,
+                    shoot: drawnBaseCard.shoot,
+                    pass: drawnBaseCard.pass,
+                    defense: drawnBaseCard.defense,
                 },
             });
 
