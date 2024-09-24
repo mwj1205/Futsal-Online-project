@@ -243,14 +243,65 @@ user가 캐시를 획득하는 API
 ### 4. 선수 뽑기 API (POST /??) (JWT 인증 필요)
 
 랜덤한 선수를 뽑는 API. 뽑기를 시행하면 일정량의 cash가 소비됨.
+요청에 따라 1장 또는 10장의 카드를 무작위로 뽑음.
+각 카드는 UserCard로 저장 및 사용자의 Strage에 보관.
 
 **요청 형식:**
+1. URL : /gacha
+2. Method : POST  
+3. Headers : Authorization : Bearer <JWT 토큰>
+4. Body : numDraws(선택, 기본값 1) : 뽑을 카드의 개수 
+```json
+{
+  "numDraws": 1
+}
+```
 
 **응답 형식:**
 
+**가챠 성공시**
+```json
+{
+  "success": true,
+  "newCards": [
+    {
+      "id": 1,
+      "playername": "Player 1",
+      "position": "Forward",
+      "speed": 80,
+      "shoot": 85,
+      "pass": 75,
+      "defense": 60
+    }
+  ],
+  "remainingCash": 900
+}
+```
+
+**실패 시 응답 예시**
+**골드 부족할 시**
+```json
+{
+  "error": "골드가 부족합니다."
+}
+```
+
+**서버 오류 발생 시**
+```json
+{
+  "error": "가챠 실행 중 오류가 발생했습니다."
+}
+```
+
 **동작 설명**
 
-1. 클라이언트는 POST 요청을 보냄
+1. 사용자가 요청을 보내면 JWT 인증을 거친 후 처리.
+2. 요청에서 numDraws 값을 받아 1 ~ 10 사이의 고정 값으로 뽑기를 설정.
+   값이 없거나 범위를 벗어나면 기본값인 1 또는 최대값인 10으로 설정.
+3. 설정된 뽑기의 개수에 따라 총 비용이 계산. 가챠 1장 당 100의 cash가 차감.
+4. cash가 부족한 경우 에러 응답을 반환.
+5. BaseCard 에서 무작위 카드 선택 후 UserCard를 생성, 사용자의 Storage에 보관.
+6. 뽑은 카드와 남은 cash를 포함한 성공 응답을 반환.
 
 ## 팀 꾸리기 API
 
