@@ -7,6 +7,8 @@ import inquiryRouter from './routes/inquiry.router.js';
 import playerRouter from './routes/player.router.js';
 import SupportRouter from './routes/support.router.js';
 import ErrorHandlerMiddleware from './middlewares/error-handler.middleware.js';
+import gacharouter from './routes/gacha.js'
+import reviewrouter from './routes/players.js'
 const app = express();
 const PORT = 3000;
 
@@ -20,6 +22,8 @@ app.use('/api', [
   rankingRouter,
   playerRouter,
   SupportRouter,
+  gacharouter,
+  reviewrouter
 ]);
 
 app.use(ErrorHandlerMiddleware);

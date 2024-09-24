@@ -31,7 +31,7 @@ router.post('/gacha', authMiddleware, async (req, res) => {
         });
 
         // 전체 BaseCard에서 무작위로 카드를 뽑음
-        const baseCards = await prisma.baseCard.findMany();
+        const baseCards = await prisma.BaseCard.findMany();
         let newCards = [];
 
         for (let i = 0; i < draws; i++) {
@@ -41,7 +41,7 @@ router.post('/gacha', authMiddleware, async (req, res) => {
             // 새로운 UserCard 생성 및 stat 정보 저장
             const newCard = await prisma.userCard.create({
                 data: {
-                    playername: drawnBaseCard.name,
+                    playername: drawnBaseCard.playername,
                     position: drawnBaseCard.position,
                     userid: user.id,
                     speed: drawnBaseCard.speed,
