@@ -3,22 +3,21 @@ import { prisma } from '../utils/prisma/prismaClient.js';
 
 export default async function authenticateToken(req, res, next) {
   try {
-    // // 헤더에 authorization를 저장
-    // const authHeader = req.headers['authorization'];
+    //  헤더에 authorization를 저장
+     const authHeader = req.headers['authorization'];
 
-    // if (!authHeader) throw new Error('토큰이 존재하지 않습니다.');
+     if (!authHeader) throw new Error('토큰이 존재하지 않습니다.');
 
-    // const [tokenType, token] = authHeader.split(' ');
+     const [tokenType, token] = authHeader.split(' ');
 
-    // if (tokenType !== 'Bearer') throw new Error('잘못된 토큰 형식입니다.');
+    if (tokenType !== 'Bearer') throw new Error('잘못된 토큰 형식입니다.');
 
-    // // token에 저장된 userId를 복호화 하여 저장
-    // const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-    // const userId = decodedToken.userId;
+    // token에 저장된 userId를 복호화 하여 저장
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decodedToken.userId;
 
     const user = await prisma.users.findFirst({
-      //where: { id: parseInt(userId) },
-      where: { id: 1 },
+     where: { id: parseInt(userId) },
     });
 
     if (!user) {
